@@ -18,7 +18,6 @@
 
 ## Transport flow
 - Preferred minimal path: Computer 1 writes request to Firebase; Computer 2 runs a listener (long-poll/WebSocket) on its queue, processes via `handler`, writes result back; Computer 1 listens for result.
-- If Cloud Functions are used: one CF validates/auths and enqueues to Computer 2’s queue; Computer 2 polls; optional CF to push results to Computer 1 (else it polls).
 
 ## Presence/offline
 - Computer 2 heartbeats `{status, last_seen}` to Firebase every N seconds.
@@ -39,3 +38,28 @@
 
 ## Platform notes
 - Linux first. Mac next. Windows: prefer WSL; native Windows needs adjusted venv activation paths.
+
+## Risks & assumptions (MVP)
+- Installation is a one-command installer per OS but still undefined; assumes Python and a sibling `venv/` are present/created and that Firebase creds/config succeed without rollback on partial failures.
+- Credentials never expire by default and are stored locally in `village/credentials.json`; users must protect that file (and their backups) because there is no rotation/reset story yet, and we are not enforcing file permissions.
+- Requests rely on client timestamps only; no server-side nonce/window to prevent replay, and passwords are sent on every call.
+- User apps run without sandboxing or resource limits; code/dependency integrity is not validated before execution.
+- Offline/queue TTL handling is optional; callers may hang on dead workers. Assumes light load so Firebase RTDB limits/quotas are not a concern for now.
+- CLI uses positional arguments, so credentials can land in shell history; consider `config set` plus prompting/masking even though secrets are persisted to `credentials.json`.
+
+## Architecture boundaries (for clarity)
+- Central cloud village: Firebase RTDB plus portal/routing entrypoint that validates requests and enqueues to the correct user machine.
+- Device agent: installed via one command; sets up local runtime, stores credentials in `village/credentials.json`, sends calls to the cloud, listens for inbound work, executes `village/main.py:handler`, and posts results back.
+- App discovery on a device is implicit/automatic based on local presence of `village/main.py`; no explicit publish step in MVP.
+
+## App (device) MVP spec
+- Lives in `app/` with `village/main.py` (and optional `venv/`); if present and the agent is running, the app is callable.
+- One-command installer sets up CLI + agent, writes `village/credentials.json` (uid/password/app list) and Firebase config needed to reach the cloud.
+- Agent heartbeats presence, listens for requests, invokes `handler(event)`, applies per-call timeout, writes responses, and keeps minimal local logs.
+- CLI uses positional commands (`login`, `call`, `logs`, `config set`) reading credentials from `village/credentials.json`; passwords can still be passed positionally.
+
+## Cloud (backend) MVP spec
+- Lives in `cloud/`; uses Firebase RTDB for queues/presence/responses and an HTTPS ingress to authenticate and enqueue.
+- Ingress validates uid/password, checks app is allowed and presence is fresh, then writes the request to RTDB with `call_id` and `ts`.
+- Device writes `{call_id, status, result|error_code|message}` to responses; clients poll/read and drop stale results by `ts`.
+- Presence tracked per `uid` (`last_seen/status`); ingress returns `offline` if stale.
