@@ -49,7 +49,7 @@ Installation
 - Everything hosted on Firebase realtime db
 
 # Milestone 1 quick start (Linux, manual)
-- Ensure Python 3 is installed; create a venv in `app/venv` and `pip install -r app/requirements.txt`.
-- Set machine identity and Firebase config: `python -m village.cli config set uid YOUR_UID`, `python -m village.cli config set password YOUR_PW`, `python -m village.cli config set firebase_url https://<project>.firebaseio.com`.
-- Run the agent: `python -m village.cli agent` (from `app/`).
-- From another machine, enqueue a call: `python -m village.cli call YOUR_UID YOUR_PW app arg1 arg2`.
+- Ensure Python 3 is installed; create/activate a venv in `app/venv` and `pip install -r app/requirements.txt`.
+- Set machine identity (writes `app/village/config.json`): `python -m village.cli set account_name YOUR_UID` and `python -m village.cli set password YOUR_PW`. Firebase URL defaults to `https://village-app.firebaseio.com`.
+- Run the agent from `app/`: `python -m village.cli run` (listens for requests, heartbeats presence, writes responses).
+- From another machine, call your app and wait for result: `python -m village.cli call YOUR_UID YOUR_PW app arg1 arg2` (defaults to 30s wait).

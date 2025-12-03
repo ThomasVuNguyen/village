@@ -1,4 +1,5 @@
 import importlib.util
+import logging
 import time
 from pathlib import Path
 from typing import Any, Callable, Dict
@@ -30,6 +31,20 @@ class Agent:
         self.uid = self.cfg.get("uid", "")
         self.password = self.cfg.get("password", "")
         self.app_name = self.cfg.get("apps", [None])[0] or "default"
+        self.log = self._setup_log()
+
+    def _setup_log(self) -> logging.Logger:
+        logs_dir = self.app_root / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        log_path = logs_dir / "agent.log"
+        logger = logging.getLogger("village.agent")
+        if not logger.handlers:
+            logger.setLevel(logging.INFO)
+            handler = logging.FileHandler(log_path, encoding="utf-8")
+            formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+        return logger
 
     def heartbeat(self) -> None:
         if self.uid:
@@ -41,6 +56,7 @@ class Agent:
             return
         call_id = next_req["call_id"]
         payload = next_req["request"]
+        self.log.info("received call %s", call_id)
         try:
             result = self.handler(payload)
             body = {
@@ -50,6 +66,7 @@ class Agent:
                 "ts": int(time.time()),
             }
         except Exception as exc:  # pragma: no cover
+            self.log.exception("handler failed for call %s", call_id)
             body = {
                 "call_id": call_id,
                 "status": "error",
@@ -58,6 +75,7 @@ class Agent:
             }
         self.transport.write_response(self.uid, call_id, body)
         self.transport.ack_request(self.uid, call_id)
+        self.log.info("responded to call %s with status %s", call_id, body["status"])
 
     def run_forever(self, sleep_seconds: int = 2) -> None:
         while True:

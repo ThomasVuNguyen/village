@@ -8,7 +8,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "uid": "",
     "password": "",
     "apps": [],
-    "firebase_url": "",
+    "firebase_url": "https://village-app.firebaseio.com",
     "api_key": "",
 }
 

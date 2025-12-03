@@ -10,3 +10,6 @@ Specs:
 - Firebase realtime db
 - Simple GCP stuff, firebase preferable
 - Firebase cloud functions
+
+Deploy (rules only):
+- `firebase deploy --only database:village-app --project comfyshare-a8fd8` (uses `cloud/firebase.json` + `cloud/.firebaserc`).

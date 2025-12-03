@@ -10,7 +10,7 @@
    - Installs CLI + background agent.
    - Ensures Python is available; creates/updates `village/venv/` if needed.
    - Writes Firebase config and `village/config.json` (uid, password, allowed apps).
-2) User sets or edits the machine identity via CLI (e.g., `village config set uid ...` and `village config set password ...`), which updates `config.json`; duplicates uids are rejected by the cloud.
+2) User sets or edits the machine identity via CLI: `village set account_name ...` and `village set password ...`; duplicates uids are rejected by the cloud.
 3) Agent starts (or is started by the installer) and begins heartbeating presence using the uid/password as the machine identity (not an interactive login).
 
 ## Flow: create an app on the device
@@ -34,7 +34,7 @@
 
 ## Flow: credentials
 - Stored locally in `village/config.json`; no enforced file perms.
-- UID/password identify the machine and do not expire by default; passwords may be passed positionally.
+- UID/password identify the machine and do not expire by default; passwords may be passed positionally or set via `village set ...`.
 
 ## Flow: troubleshooting
 - Check presence: `village logs app tail` (minimal local logs in `app/`).

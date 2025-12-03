@@ -3,13 +3,15 @@ from typing import Any, Dict
 
 import requests
 
+from .config import FIREBASE_URL
+
 
 class Ingress:
     """
     Minimal ingress that authenticates and enqueues to Firebase RTDB via REST.
     """
 
-    def __init__(self, firebase_url: str) -> None:
+    def __init__(self, firebase_url: str = FIREBASE_URL) -> None:
         self.firebase_url = firebase_url.rstrip("/")
 
     def _url(self, path: str) -> str:

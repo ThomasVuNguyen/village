@@ -40,6 +40,12 @@ class FirebaseTransport:
                 return {"call_id": call_id, "request": req}
         return None
 
+    def read_response(self, uid: str, call_id: str) -> Optional[Dict[str, Any]]:
+        resp = requests.get(self._url(f"responses/{uid}/{call_id}"))
+        if resp.status_code != 200:
+            return None
+        return resp.json()
+
     def ack_request(self, uid: str, call_id: str) -> None:
         requests.delete(self._url(f"requests/{uid}/{call_id}"))
 
