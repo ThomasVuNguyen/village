@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "comfyshare-a8fd8"
+  },
+  "targets": {
+    "comfyshare-a8fd8": {
+      "database": {
+        "village-app": [
+          "village-app"
+        ]
+      }
+    }
+  }
+}
