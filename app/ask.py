@@ -5,8 +5,8 @@ Usage:
   set TO_DEVICE_ID=<target_device_id>
   set COMMAND=<cli_command_to_run_on_target>
   set ASK_URL=<override_endpoint_optional>
-  python ask.py         # Send and exit
-  python ask.py --wait  # Send and wait for response
+  python ask.py            # Send and wait for response (default)
+  python ask.py --no-wait  # Send and exit immediately
 """
 
 import json
@@ -75,7 +75,7 @@ def main() -> None:
 
     from_device_id = load_device_id()
     command = os.environ.get("COMMAND", "echo hello from village")
-    wait = "--wait" in sys.argv
+    wait = "--no-wait" not in sys.argv  # Wait by default unless --no-wait
 
     resp = requests.post(
         ASK_URL,
