@@ -35,10 +35,9 @@ def load_device_id() -> str:
     return DEVICE_FILE.read_text().strip()
 
 
-def wait_for_response(route_id: str, id_token: str, timeout: int = 60) -> None:
+def wait_for_response(route_id: str, id_token: str, start_time: float, timeout: int = 240) -> None:
     """Poll for response and print when received."""
     print(f"Waiting for response (timeout: {timeout}s)...", end="", flush=True)
-    start_time = time.time()
     poll_interval = 1  # seconds
 
     while time.time() - start_time < timeout:
@@ -50,11 +49,13 @@ def wait_for_response(route_id: str, id_token: str, timeout: int = 60) -> None:
             if resp.status_code == 200 and resp.json():
                 response_data = resp.json()
                 output = response_data.get("output", "[no output]")
+                duration = time.time() - start_time
                 print("\n\n" + "=" * 60)
                 print("RESPONSE:")
                 print("=" * 60)
                 print(output)
                 print("=" * 60)
+                print(f"Time taken: {duration:.2f}s")
                 return
 
             print(".", end="", flush=True)
@@ -77,6 +78,7 @@ def main() -> None:
     command = os.environ.get("COMMAND", "echo hello from village")
     wait = "--no-wait" not in sys.argv  # Wait by default unless --no-wait
 
+    start_time = time.time()
     resp = requests.post(
         ASK_URL,
         headers={"Authorization": f"Bearer {id_token}"},
@@ -99,7 +101,7 @@ def main() -> None:
     print(f"Route ID: {route_id}")
 
     if wait and route_id:
-        wait_for_response(route_id, id_token)
+        wait_for_response(route_id, id_token, start_time)
 
 
 if __name__ == "__main__":

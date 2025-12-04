@@ -34,19 +34,22 @@ def load_device_id() -> str:
 def execute_command(command: str) -> str:
     """Execute command and return output."""
     try:
+        # Redirect stdin from /dev/null so interactive commands get EOF and exit
+        # This prevents commands like llama-cli from hanging waiting for input
         result = subprocess.run(
             command,
             shell=True,
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=240,
+            stdin=subprocess.DEVNULL,
         )
         output = result.stdout
         if result.stderr:
             output += f"\n[stderr]\n{result.stderr}"
         return output or "[no output]"
     except subprocess.TimeoutExpired:
-        return "[error] Command timed out (30s limit)"
+        return "[error] Command timed out (240s limit)"
     except Exception as e:
         return f"[error] {str(e)}"
 
@@ -74,12 +77,13 @@ def send_response(route_id: str, output: str, device_id: str, id_token: str) -> 
 def check_pending_routes(device_id: str, id_token: str, processed: set) -> None:
     """Check for pending routes targeting this device."""
     try:
-        # Query routes where to_device_id matches and status is pending
+        # Fetch all routes
         resp = requests.get(
             f"{RTDB_URL}/routes.json?auth={id_token}",
             timeout=15,
         )
         if resp.status_code != 200:
+            print(f"Error fetching routes: {resp.status_code} {resp.text}")
             return
 
         routes = resp.json()

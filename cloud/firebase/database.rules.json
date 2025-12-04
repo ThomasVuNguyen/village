@@ -1,28 +1,6 @@
 {
   "rules": {
-    "users": {
-      "$uid": {
-        ".read": "auth != null && auth.uid == $uid",
-        ".write": "auth != null && auth.uid == $uid"
-      }
-    },
-    "devices": {
-      "$device_id": {
-        ".read": "auth != null && data.child('owner_uid').val() == auth.uid",
-        ".write": "auth != null && (!data.exists() || data.child('owner_uid').val() == auth.uid)"
-      }
-    },
-    "routes": {
-      "$route_id": {
-        ".read": "auth != null && (data.child('from_uid').val() == auth.uid || data.child('to_uid').val() == auth.uid)",
-        ".write": "auth != null && newData.child('from_uid').val() == auth.uid"
-      }
-    },
-    "responses": {
-      "$route_id": {
-        ".read": "auth != null",
-        ".write": "auth != null"
-      }
-    }
+    ".read": "auth != null",
+    ".write": "auth != null"
   }
 }
