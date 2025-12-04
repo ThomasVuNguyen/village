@@ -107,9 +107,9 @@ def listen_realtime(device_id: str, id_token: str, processed: set, stop_event: d
 
     while not stop_event.get("stopped", False):
         try:
-            # Fetch routes targeting this device
+            # Fetch all routes (no query params to avoid 400 errors)
             resp = requests.get(
-                f"{RTDB_URL}/routes.json?auth={id_token}&orderBy=\"to_device_id\"&equalTo=\"{device_id}\"",
+                f"{RTDB_URL}/routes.json?auth={id_token}",
                 timeout=5,
             )
 
