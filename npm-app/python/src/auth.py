@@ -36,7 +36,7 @@ def _load_cache() -> Dict[str, Any]:
 
 
 def _save_cache(id_token: str, refresh_token: str, expires_in: int) -> None:
-    expires_at = int(time.time()) + max(int(expires_in), 0) - 60  # refresh 1m early
+    expires_at = int(time.time()) + max(int(expires_in), 0) - 30  # refresh 30s early (extended cache)
     AUTH_FILE.parent.mkdir(parents=True, exist_ok=True)
     AUTH_FILE.write_text(
         json.dumps(

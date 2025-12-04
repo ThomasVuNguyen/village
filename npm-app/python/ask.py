@@ -33,7 +33,7 @@ RTDB_URL = "https://village-app.firebaseio.com"
 def wait_for_response(route_id: str, id_token: str, start_time: float, timeout: int = 240) -> None:
     """Poll for response and print when received."""
     print(f"Waiting for response (timeout: {timeout}s)...", end="", flush=True)
-    poll_interval = 1  # seconds
+    poll_interval = 0.5  # seconds (reduced for faster response)
 
     while time.time() - start_time < timeout:
         try:

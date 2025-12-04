@@ -25,7 +25,7 @@ Share with friends
 
   To test locally:
   cd npm-app
-  npm link
+  npm link --force
   village help
 
   To publish:

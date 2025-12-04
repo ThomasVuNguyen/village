@@ -1,6 +1,6 @@
 {
   "name": "@thomasthemaker/village",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Distributed inter-device communication - send commands between your computers",
   "main": "bin/village.js",
   "bin": {

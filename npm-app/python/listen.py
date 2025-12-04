@@ -146,7 +146,7 @@ def main() -> None:
     print("Press Ctrl+C to stop\n")
 
     processed = set()
-    poll_interval = 2  # seconds
+    poll_interval = 0.5  # seconds (reduced for faster response)
 
     # Set initial status to idle
     id_token = get_id_token(auto_create=False)
