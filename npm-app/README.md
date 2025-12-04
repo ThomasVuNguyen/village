@@ -5,7 +5,7 @@ Distributed inter-device communication - send commands between your computers an
 ## Installation
 
 ```bash
-npm install -g village
+npm install -g @thomasthemaker/village
 ```
 
 **Requirements:**
@@ -78,6 +78,10 @@ Fast, secure, simple.
 - **CLI**: Node.js wrapper (distribution)
 - **Backend**: Python (Firebase + command execution)
 - **Cloud**: Firebase Realtime Database + Cloud Functions
+
+## Repository
+
+https://github.com/thomasthemaker/village
 
 ## License
 

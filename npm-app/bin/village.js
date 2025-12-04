@@ -99,7 +99,7 @@ async function main() {
   if (!hasPython) {
     console.error('Error: Python is not installed or not in PATH');
     console.error('Please install Python 3.x from https://python.org');
-    console.error('Or run: npm install -g village (to reinstall)');
+    console.error('Or run: npm install -g @thomasthemaker/village (to reinstall)');
     process.exit(1);
   }
 

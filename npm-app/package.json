@@ -1,5 +1,5 @@
 {
-  "name": "village",
+  "name": "@thomasthemaker/village",
   "version": "0.1.0",
   "description": "Distributed inter-device communication - send commands between your computers",
   "main": "bin/village.js",
@@ -18,7 +18,7 @@
     "compute",
     "firebase"
   ],
-  "author": "Village Contributors",
+  "author": "thomasthemaker",
   "license": "MIT",
   "files": [
     "bin",
@@ -29,6 +29,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/village.git"
+    "url": "https://github.com/thomasthemaker/village.git"
   }
 }

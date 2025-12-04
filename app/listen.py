@@ -6,9 +6,12 @@ Usage:
   python listen.py
 """
 
+import atexit
 import json
 import os
+import signal
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -118,6 +121,27 @@ def check_pending_routes(device_id: str, id_token: str, processed: set) -> None:
 
 def main() -> None:
     device_id = get_local_device_id()
+    id_token_holder = {"token": None}  # Mutable container for signal handlers
+
+    def cleanup(signum=None, frame=None):
+        """Cleanup handler - set device offline."""
+        print("\nStopping listener...")
+        try:
+            # Get fresh token for cleanup
+            token = get_id_token(auto_create=False)
+            update_device_status(device_id, "offline", token)
+            print("Device set to offline")
+        except Exception as e:
+            print(f"Warning: Could not update status: {e}")
+        sys.exit(0)
+
+    # Register signal handlers
+    signal.signal(signal.SIGINT, cleanup)   # Ctrl+C
+    signal.signal(signal.SIGTERM, cleanup)  # kill command
+
+    # Also register atexit as fallback
+    atexit.register(lambda: cleanup())
+
     print(f"Listening for commands on device: {device_id}")
     print("Press Ctrl+C to stop\n")
 
@@ -126,18 +150,17 @@ def main() -> None:
 
     # Set initial status to idle
     id_token = get_id_token(auto_create=False)
+    id_token_holder["token"] = id_token
     update_device_status(device_id, "idle", id_token)
 
     while True:
         try:
             id_token = get_id_token(auto_create=False)
+            id_token_holder["token"] = id_token
             check_pending_routes(device_id, id_token, processed)
             time.sleep(poll_interval)
         except KeyboardInterrupt:
-            print("\nStopping listener...")
-            # Set status to offline before exiting
-            update_device_status(device_id, "offline", id_token)
-            break
+            cleanup()
         except Exception as e:
             print(f"Error: {e}")
             time.sleep(poll_interval)

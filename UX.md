@@ -20,3 +20,14 @@ If no:
   
 Get hooked
 Share with friends
+
+# Package installation
+
+  To test locally:
+  cd npm-app
+  npm link
+  village help
+
+  To publish:
+  npm login
+  npm publish
