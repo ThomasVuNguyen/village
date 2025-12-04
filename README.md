@@ -1,6 +1,40 @@
 # village
-A portal to allow computers to talk to each other on the internet
-(in the form of a server-like application)
+A portal to allow computers to talk to each other on the internet - send commands from Device A to Device B and get responses back automatically.
+
+## Quick Start
+
+**Setup (both devices):**
+```bash
+cd app
+pip install -r requirements.txt
+python register_user.py    # Creates account if needed, signs you in
+python register_device.py  # Registers this device
+```
+
+**Device B (receiver) - Start listener:**
+```bash
+python listen.py
+# Waits for incoming commands and executes them automatically
+```
+
+**Device A (sender) - Send command:**
+```bash
+# PowerShell
+$env:TO_DEVICE_ID="device-b-id-here"
+$env:COMMAND="ls -la"
+python ask.py
+
+# Bash
+export TO_DEVICE_ID="device-b-id-here"
+export COMMAND="ls -la"
+python ask.py
+```
+
+Device A will wait, Device B executes the command, response appears in Device A terminal.
+
+**Other commands:**
+- `python sign_out.py` - Sign out (keeps device_id)
+- `python sign_out.py --reset` - Full reset (deletes device_id)
 
 # Philosophy
 
