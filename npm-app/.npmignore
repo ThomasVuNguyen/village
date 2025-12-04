@@ -1,0 +1,30 @@
+# Test files
+test/
+*.test.js
+
+# Python cache
+python/__pycache__/
+python/**/__pycache__/
+python/**/*.pyc
+python/.pytest_cache/
+
+# Development
+.git/
+.gitignore
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python venv (created during postinstall)
+python/venv/
+python/.venv/
+venv/
+.venv/

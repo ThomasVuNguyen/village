@@ -1,0 +1,34 @@
+{
+  "name": "village",
+  "version": "0.1.0",
+  "description": "Distributed inter-device communication - send commands between your computers",
+  "main": "bin/village.js",
+  "bin": {
+    "village": "./bin/village.js"
+  },
+  "scripts": {
+    "postinstall": "node bin/postinstall.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cli",
+    "remote",
+    "command",
+    "distributed",
+    "compute",
+    "firebase"
+  ],
+  "author": "Village Contributors",
+  "license": "MIT",
+  "files": [
+    "bin",
+    "python"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/village.git"
+  }
+}
