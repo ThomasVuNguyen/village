@@ -8,6 +8,13 @@ const fs = require('fs');
 const args = process.argv.slice(2);
 const command = args[0];
 
+// Show version
+if (command === '--version' || command === '-v' || command === 'version') {
+  const packageJson = require('../package.json');
+  console.log(`village v${packageJson.version}`);
+  process.exit(0);
+}
+
 // Command mapping to Python scripts
 const commands = {
   setup: 'register_user.py',
@@ -33,6 +40,7 @@ Commands:
   status             Show all your devices and their status
   logout             Sign out (keeps device_id)
   logout --reset     Full reset (deletes device_id)
+  version, -v        Show version number
 
 Examples:
   village setup
