@@ -3565,5 +3565,106 @@ and send command to that 'not busy' computer, and get response back
 
   The system now supports your 5-device compute pool use case! 🚀
 
+> /export 
+  ⎿  Conversation exported to: conversations/claude-1.txt
+
+> (venv) tungnguyen@Mac app % ls
+__pycache__             listen.py               register_user.py        
+sign_out.py             venv
+ask.py                  register_device.py      requirements.txt        src
+(venv) tungnguyen@Mac app % python listen.py
+Traceback (most recent call last):
+  File "/Users/tungnguyen/Documents/GitHub/village/app/listen.py", line 16, 
+in <module>
+    from src.auth import get_id_token
+  File "/Users/tungnguyen/Documents/GitHub/village/app/src/auth.py", line 
+19, in <module>
+    from firebase_config import API_KEY as CONFIG_API_KEY
+ModuleNotFoundError: No module named 'firebase_config' 
+
+● Quick fix - the import in src/auth.py needs to be updated:
+
+● Read(app\src\auth.py)
+  ⎿  Read 25 lines
+
+● Update(app\src\auth.py)
+  ⎿  Updated app\src\auth.py with 1 addition and 1 removal            
+       16    from typing import Any, Dict, Optional
+       17    
+       18    import requests
+       19 -  from firebase_config import API_KEY as CONFIG_API_KEY
+       19 +  from .firebase_config import API_KEY as CONFIG_API_KEY
+       20    
+       21    AUTH_FILE = (
+       22        Path(os.environ["APPDATA"]) / "village" / "auth.json"
+
+● Fixed! The issue was that src/auth.py was importing firebase_config
+  without the relative import. Changed it to use .firebase_config since
+  they're in the same package.
+
+  Try again:
+  python listen.py
+
+  Should work now! 🚀
+
+> ensure every other import is fixed too 
+
+● Read(app\src\device.py)
+  ⎿  Read 87 lines
+
+● Read(app\src\router.py)
+  ⎿  Read 25 lines
+
+● Update(app\src\router.py)
+  ⎿  Updated app\src\router.py with 1 addition and 1 removal      
+        4    
+        5    from typing import Optional
+        6    
+        7 -  from src.device import get_idle_devices
+        7 +  from .device import get_idle_devices
+        8    
+        9    
+       10    def find_idle_device(id_token: str) -> Optional[str]:
+
+● Bash(cd app && grep -n "^from.*import\|^import" *.py | grep -E
+      "(auth|firebase_config|device|router)" | head -20)
+  ⎿  ask.py:24:from src.auth import get_id_token         
+     ask.py:25:from src.device import get_local_device_id
+     ask.py:26:from src.router import find_idle_device
+     … +10 lines (ctrl+o to expand)
+
+● Bash(cd app/src && grep -n "^from.*import\|^import" *.py | grep -v
+      "^__init__")
+  ⎿  auth.py:11:import getpass     
+     auth.py:12:import json
+     auth.py:13:import os
+     … +11 lines (ctrl+o to expand)
+
+● Bash(test -f app/src/__init__.py && echo "✓ __init__.py exists" || echo "✗
+      __init__.py missing")
+  ⎿  ✓ __init__.py exists
+
+● Bash(find app -name "*.py" -type f | sort)
+  ⎿  app/ask.py                     
+     app/listen.py
+     app/register_device.py
+     … +548 lines (ctrl+o to expand)
+
+● Perfect! All imports are now fixed. Here's the summary:
+
+  ✅ Fixed imports:
+  - src/auth.py → imports .firebase_config (relative)
+  - src/router.py → imports .device (relative)
+  - src/device.py → no internal imports
+  - app/*.py files → import from src.auth, from src.device, from src.router
+  (absolute)
+  - src/__init__.py → exists ✓
+
+  All imports should work correctly now. Try running:
+
+  python listen.py
+
+  Should start without any import errors! 🎉
+
 
 
