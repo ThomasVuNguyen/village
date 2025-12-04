@@ -2,8 +2,6 @@
 Register a user with the portal (idempotent). Automatically signs up anonymously with Firebase if needed and caches the token locally.
 
 Usage:
-  set FIREBASE_API_KEY=<firebase_web_api_key>
-  set FIREBASE_REFRESH_TOKEN=<refresh_token>  # optional; otherwise anonymous sign-up is used
   set REGISTER_USER_URL=<override_endpoint_optional>
   python register_user.py
 """

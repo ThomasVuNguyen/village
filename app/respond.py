@@ -1,9 +1,7 @@
 """
-Send a response for a given route. Uses cached/auto-created auth token.
+Send a response for a given route. Uses cached/Google device-flow auth token.
 
 Usage:
-  set FIREBASE_API_KEY=<firebase_web_api_key>
-  set FIREBASE_REFRESH_TOKEN=<refresh_token>  # one-time, then cached automatically
   set ROUTE_ID=<route_id_from_ask>
   set OUTPUT=<response_output_text>
   set RESPOND_URL=<override_endpoint_optional>

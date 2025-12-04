@@ -1,9 +1,7 @@
 """
-Register the local device with the portal. Uses cached/auto-created auth token.
+Register the local device with the portal. Uses cached/Google device-flow auth token.
 
 Usage:
-  set FIREBASE_API_KEY=<firebase_web_api_key>
-  set FIREBASE_REFRESH_TOKEN=<refresh_token>  # one-time, then cached automatically
   python register_device.py [optional-name]
 
 Creates/reads a persistent device_id at ~/.village/device_id (or %APPDATA%\village\device_id on Windows),

@@ -60,7 +60,7 @@ def _ensure_user_record(uid: str, claims: Dict[str, Any]) -> Dict[str, Any]:
         "created_at": existing.get("created_at", now) if existing else now,
         "last_sign_in_at": now,
     }
-    ref.update(user_record)
+    ref.set(user_record)
     return user_record
 
 
@@ -118,7 +118,7 @@ def register_device(req: https_fn.Request) -> https_fn.Response:
         return _error("device_id already claimed", status=403)
 
     now = int(time.time())
-    ref.update(
+    ref.set(
         {
             "owner_uid": uid,
             "name": name or device_id,

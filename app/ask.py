@@ -1,9 +1,7 @@
 """
-Send a route (ask) from this device to another device via the portal. Uses cached/auto-created auth token.
+Send a route (ask) from this device to another device via the portal. Uses cached/Google device-flow auth token.
 
 Usage:
-  set FIREBASE_API_KEY=<firebase_web_api_key>
-  set FIREBASE_REFRESH_TOKEN=<refresh_token>  # one-time, then cached automatically
   set TO_DEVICE_ID=<target_device_id>
   set COMMAND=<cli_command_to_run_on_target>
   set ASK_URL=<override_endpoint_optional>

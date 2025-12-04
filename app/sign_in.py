@@ -1,9 +1,7 @@
 """
-Sign in (validate token) against the portal; updates last_sign_in_at. Automatically refreshes or signs up anonymously if no token cached.
+Sign in (validate token) against the portal; updates last_sign_in_at. Automatically uses Google device flow if no token cached.
 
 Usage:
-  set FIREBASE_API_KEY=<firebase_web_api_key>
-  set FIREBASE_REFRESH_TOKEN=<refresh_token>  # optional; otherwise anonymous sign-up is used
   set SIGN_IN_URL=<override_endpoint_optional>
   python sign_in.py
 """

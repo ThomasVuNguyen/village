@@ -17,9 +17,9 @@ respond -> send back output for that command
 # Design decision
 
 For the sake of simplicity and minimal development, we will use:
-- Auth: Firebase Auth w/ Google Login
-- Database: Firebase Firestore or Firebase Realtime Database
-- Storage: Firebase Storage
+- Auth: Firebase Auth w/ Email/Password
+- Database: Firebase Realtime Database
+- Storage: Firebase Storage (if needed)
 - Function: Firebase Cloud Functions
 
 # Schema (minimal routing only)
@@ -41,7 +41,7 @@ The portal only authenticates the caller and routes messages. All validation and
   - from_device_id, output (string/JSON), content_type, created_at
 
 Notes
-- Auth: Firebase Auth (Google/anonymous). Clients auto sign up anonymously using the bundled Web API key in app/firebase_config.py (override with FIREBASE_API_KEY env). Tokens cached locally; functions verify tokens and enforce device ownership.
+- Auth: Firebase Auth (Email/Password). Clients run `register_user.py` which prompts for email/password - if account doesn't exist, it offers to create it automatically. Tokens are cached locally at `~/.village/auth.json` with automatic refresh. Functions verify tokens and enforce device ownership.
 - Delivery: portal writes routes; destination devices should keep an RTDB listener on their route path for fast push delivery. Polling is only a fallback. Replies go to responses/{route_id}.
 - Ingress: use HTTPS Cloud Functions for register_user, sign_in, register_device, ask, respond so server-side auth/validation wraps every write; the functions then write to RTDB.
 
