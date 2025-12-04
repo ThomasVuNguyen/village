@@ -1,18 +1,18 @@
 """
-Sign in (validate token) against the portal; updates last_sign_in_at.
+Register a user with the portal (idempotent; uses Firebase ID token).
 
 Usage:
   set ID_TOKEN=<firebase_id_token>
-  set SIGN_IN_URL=<override_endpoint_optional>
-  python sign_in.py
+  set REGISTER_USER_URL=<override_endpoint_optional>
+  python register_user.py
 """
 
 import os
 
 import requests
 
-DEFAULT_URL = "https://sign-in-wprnv4rl5q-uc.a.run.app"
-SIGN_IN_URL = os.environ.get("SIGN_IN_URL", DEFAULT_URL)
+DEFAULT_URL = "https://register-user-wprnv4rl5q-uc.a.run.app"
+REGISTER_USER_URL = os.environ.get("REGISTER_USER_URL", DEFAULT_URL)
 
 
 def main() -> None:
@@ -21,7 +21,7 @@ def main() -> None:
         raise SystemExit("ID_TOKEN env var is required (Firebase ID token).")
 
     resp = requests.post(
-        SIGN_IN_URL,
+        REGISTER_USER_URL,
         headers={"Authorization": f"Bearer {id_token}"},
         json={},
         timeout=15,

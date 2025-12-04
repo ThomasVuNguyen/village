@@ -8,10 +8,11 @@ In a computer, there are a number of applications running. Other computers can c
 
 # Architecture
 
-sign_up -> sign up a new user
-sign_in -> sign in as a user
-request -> send a request to an application on a computer in the village network
-response -> send back a response to the request
+register_user -> register a user (idempotent, via Firebase token)
+sign_in -> validate session and update last_sign_in_at
+register_device -> register a device for a user
+ask -> send a request to an application on a computer in the village network
+respond -> send back a response to the request
 
 # Design decision
 

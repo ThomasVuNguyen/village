@@ -46,6 +46,52 @@ def _route_ref(route_id: str):
     return db.reference(f"routes/{route_id}")
 
 
+def _user_ref(uid: str):
+    return db.reference(f"users/{uid}")
+
+
+def _ensure_user_record(uid: str, claims: Dict[str, Any]) -> Dict[str, Any]:
+    ref = _user_ref(uid)
+    existing = ref.get()
+    now = int(time.time())
+    user_record = {
+        "email": claims.get("email", ""),
+        "display_name": claims.get("name", ""),
+        "created_at": existing.get("created_at", now) if existing else now,
+        "last_sign_in_at": now,
+    }
+    ref.update(user_record)
+    return user_record
+
+
+@https_fn.on_request()
+def register_user(req: https_fn.Request) -> https_fn.Response:
+    if req.method != "POST":
+        return _error("Use POST", status=405)
+
+    claims = _require_auth(req)
+    if not claims:
+        return _error("Unauthorized", status=401)
+
+    uid = claims["uid"]
+    user_record = _ensure_user_record(uid, claims)
+    return _json_response({"uid": uid, **user_record})
+
+
+@https_fn.on_request()
+def sign_in(req: https_fn.Request) -> https_fn.Response:
+    if req.method != "POST":
+        return _error("Use POST", status=405)
+
+    claims = _require_auth(req)
+    if not claims:
+        return _error("Unauthorized", status=401)
+
+    uid = claims["uid"]
+    user_record = _ensure_user_record(uid, claims)
+    return _json_response({"uid": uid, **user_record})
+
+
 @https_fn.on_request()
 def register_device(req: https_fn.Request) -> https_fn.Response:
     if req.method != "POST":
@@ -86,7 +132,7 @@ def register_device(req: https_fn.Request) -> https_fn.Response:
 
 
 @https_fn.on_request()
-def send_route(req: https_fn.Request) -> https_fn.Response:
+def ask(req: https_fn.Request) -> https_fn.Response:
     if req.method != "POST":
         return _error("Use POST", status=405)
 
@@ -137,7 +183,7 @@ def send_route(req: https_fn.Request) -> https_fn.Response:
 
 
 @https_fn.on_request()
-def send_response(req: https_fn.Request) -> https_fn.Response:
+def respond(req: https_fn.Request) -> https_fn.Response:
     if req.method != "POST":
         return _error("Use POST", status=405)
 
