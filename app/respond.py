@@ -1,5 +1,5 @@
 """
-Send a response for a given route.
+Send a response for a given route. Uses cached/auto-created auth token.
 
 Usage:
   set FIREBASE_API_KEY=<firebase_web_api_key>
