@@ -12,7 +12,6 @@ import os
 import signal
 import subprocess
 import sys
-import threading
 import time
 from pathlib import Path
 
@@ -102,84 +101,51 @@ def handle_route(route_id: str, route_data: dict, device_id: str, id_token: str,
         update_device_status(device_id, "idle", id_token)
 
 
-def listen_realtime(device_id: str, id_token: str, processed: set, stop_event: threading.Event) -> None:
-    """Listen for routes in real-time using Firebase SSE streaming."""
-    while not stop_event.is_set():
+def listen_realtime(device_id: str, id_token: str, processed: set, stop_event: dict) -> None:
+    """Listen for routes with optimized fast polling."""
+    poll_interval = 0.1  # 100ms for near-instant response
+
+    while not stop_event.get("stopped", False):
         try:
-            # Open SSE stream
+            # Fetch routes targeting this device
             resp = requests.get(
-                f"{RTDB_URL}/routes.json?auth={id_token}",
-                headers={"Accept": "text/event-stream"},
-                stream=True,
-                timeout=None,  # No timeout for streaming
+                f"{RTDB_URL}/routes.json?auth={id_token}&orderBy=\"to_device_id\"&equalTo=\"{device_id}\"",
+                timeout=5,
             )
 
             if resp.status_code != 200:
-                print(f"Stream error: {resp.status_code}, retrying in 5s...")
-                time.sleep(5)
+                print(f"Error fetching routes: {resp.status_code}, retrying...")
+                time.sleep(1)
                 continue
 
-            # Process SSE events
-            for line in resp.iter_lines():
-                if stop_event.is_set():
-                    break
+            routes = resp.json()
+            if routes and isinstance(routes, dict):
+                for route_id, route_data in routes.items():
+                    # Refresh token for each command
+                    fresh_token = get_id_token(auto_create=False)
+                    handle_route(route_id, route_data, device_id, fresh_token, processed)
 
-                if not line:
-                    continue
-
-                line = line.decode('utf-8')
-
-                # Parse SSE event
-                if line.startswith('event: '):
-                    event_type = line[7:].strip()
-                elif line.startswith('data: '):
-                    try:
-                        data = json.loads(line[6:])
-                        path = data.get('path', '')
-                        event_data = data.get('data')
-
-                        if event_data is None:
-                            continue
-
-                        # Handle different event types
-                        if path == '/':
-                            # Initial snapshot or full update
-                            if isinstance(event_data, dict):
-                                for route_id, route_data in event_data.items():
-                                    # Refresh token for each command
-                                    id_token = get_id_token(auto_create=False)
-                                    handle_route(route_id, route_data, device_id, id_token, processed)
-                        elif path.startswith('/'):
-                            # Single route update
-                            route_id = path[1:]  # Remove leading '/'
-                            if isinstance(event_data, dict):
-                                # Refresh token
-                                id_token = get_id_token(auto_create=False)
-                                handle_route(route_id, event_data, device_id, id_token, processed)
-
-                    except json.JSONDecodeError:
-                        pass  # Ignore malformed data
-                    except Exception as e:
-                        print(f"Error processing event: {e}")
+            # Short sleep for fast polling
+            time.sleep(poll_interval)
 
         except requests.exceptions.RequestException as e:
-            if not stop_event.is_set():
-                print(f"Connection error: {e}, reconnecting in 5s...")
-                time.sleep(5)
+            if not stop_event.get("stopped", False):
+                print(f"Connection error: {e}, retrying...")
+                time.sleep(1)
         except Exception as e:
-            if not stop_event.is_set():
-                print(f"Error: {e}, reconnecting in 5s...")
-                time.sleep(5)
+            if not stop_event.get("stopped", False):
+                print(f"Error: {e}")
+                time.sleep(poll_interval)
 
 
 def main() -> None:
     device_id = get_local_device_id()
-    stop_event = threading.Event()
+    stop_event = {"stopped": False}  # Mutable dict for signal handlers
 
     def cleanup(signum=None, frame=None):
         """Cleanup handler - set device offline."""
         print("\nStopping listener...")
-        stop_event.set()  # Signal listener thread to stop
+        stop_event["stopped"] = True  # Signal listener to stop
         try:
             # Get fresh token for cleanup
             token = get_id_token(auto_create=False)
@@ -196,7 +162,7 @@ def main() -> None:
     # Also register atexit as fallback
     atexit.register(lambda: cleanup())
 
-    print(f"Listening for commands on device: {device_id} (real-time mode)")
+    print(f"Listening for commands on device: {device_id} (fast polling: 100ms)")
     print("Press Ctrl+C to stop\n")
 
     processed = set()
