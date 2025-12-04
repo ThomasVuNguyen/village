@@ -1,9 +1,11 @@
 """
-Send a route (ask) from this device to another device via the portal.
+Send a route (ask) from this device to another device via the portal. Uses cached/auto-created auth token.
 
 Usage:
-  set ID_TOKEN=<firebase_id_token>
+  set FIREBASE_API_KEY=<firebase_web_api_key>
+  set FIREBASE_REFRESH_TOKEN=<refresh_token>  # one-time, then cached automatically
   set TO_DEVICE_ID=<target_device_id>
+  set COMMAND=<cli_command_to_run_on_target>
   set ASK_URL=<override_endpoint_optional>
   python ask.py
 """
@@ -13,6 +15,7 @@ import os
 from pathlib import Path
 
 import requests
+from auth import get_id_token
 
 DEFAULT_URL = "https://ask-wprnv4rl5q-uc.a.run.app"
 ASK_URL = os.environ.get("ASK_URL", DEFAULT_URL)
@@ -30,15 +33,13 @@ def load_device_id() -> str:
 
 
 def main() -> None:
-    id_token = os.environ.get("ID_TOKEN")
+    id_token = get_id_token()
     to_device_id = os.environ.get("TO_DEVICE_ID", "").strip()
-    if not id_token:
-        raise SystemExit("ID_TOKEN env var is required (Firebase ID token).")
     if not to_device_id:
         raise SystemExit("TO_DEVICE_ID env var is required.")
 
     from_device_id = load_device_id()
-    payload = {"ping": "pong"}
+    command = os.environ.get("COMMAND", "echo hello from village")
 
     resp = requests.post(
         ASK_URL,
@@ -46,8 +47,8 @@ def main() -> None:
         json={
             "from_device_id": from_device_id,
             "to_device_id": to_device_id,
-            "payload": payload,
-            "content_type": "application/json",
+            "command": command,
+            "content_type": "text/plain",
         },
         timeout=15,
     )

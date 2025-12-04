@@ -145,14 +145,14 @@ def ask(req: https_fn.Request) -> https_fn.Response:
         return _error("Invalid JSON", status=400)
 
     from_device_id = (data.get("from_device_id") or "").strip()
-    to_device_id = (data.get("to_device_id") or "").strip()
-    payload = data.get("payload")
-    content_type = (data.get("content_type") or "application/json").strip()
+    to_device_id = (data.get("to_device_id") or data.get("device_id") or "").strip()
+    command = (data.get("command") or "").strip()
+    content_type = (data.get("content_type") or "text/plain").strip()
 
     if not from_device_id or not to_device_id:
         return _error("from_device_id and to_device_id required", status=400)
-    if payload is None:
-        return _error("payload required", status=400)
+    if not command:
+        return _error("command required", status=400)
 
     uid = claims["uid"]
     from_device = _device_ref(from_device_id).get()
@@ -164,6 +164,8 @@ def ask(req: https_fn.Request) -> https_fn.Response:
         return _error("to_device_id not found", status=404)
 
     to_uid = to_device.get("owner_uid")
+    if to_uid != uid:
+        return _error("target device not owned by caller", status=403)
     now = int(time.time())
     routes_ref = db.reference("routes")
     route_ref = routes_ref.push(
@@ -172,7 +174,7 @@ def ask(req: https_fn.Request) -> https_fn.Response:
             "from_device_id": from_device_id,
             "to_uid": to_uid,
             "to_device_id": to_device_id,
-            "payload": payload,
+            "command": command,
             "content_type": content_type,
             "created_at": now,
             "status": "pending",
@@ -197,13 +199,13 @@ def respond(req: https_fn.Request) -> https_fn.Response:
 
     route_id = (data.get("route_id") or "").strip()
     from_device_id = (data.get("from_device_id") or "").strip()
-    payload = data.get("payload")
-    content_type = (data.get("content_type") or "application/json").strip()
+    output = data.get("output")
+    content_type = (data.get("content_type") or "text/plain").strip()
 
     if not route_id or not from_device_id:
         return _error("route_id and from_device_id required", status=400)
-    if payload is None:
-        return _error("payload required", status=400)
+    if output is None:
+        return _error("output required", status=400)
 
     uid = claims["uid"]
     device = _device_ref(from_device_id).get()
@@ -224,7 +226,7 @@ def respond(req: https_fn.Request) -> https_fn.Response:
     response_ref.set(
         {
             "from_device_id": from_device_id,
-            "payload": payload,
+            "output": output,
             "content_type": content_type,
             "created_at": now,
         }

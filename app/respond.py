@@ -2,8 +2,10 @@
 Send a response for a given route.
 
 Usage:
-  set ID_TOKEN=<firebase_id_token>
+  set FIREBASE_API_KEY=<firebase_web_api_key>
+  set FIREBASE_REFRESH_TOKEN=<refresh_token>  # one-time, then cached automatically
   set ROUTE_ID=<route_id_from_ask>
+  set OUTPUT=<response_output_text>
   set RESPOND_URL=<override_endpoint_optional>
   python respond.py
 """
@@ -13,6 +15,7 @@ import os
 from pathlib import Path
 
 import requests
+from auth import get_id_token
 
 DEFAULT_URL = "https://respond-wprnv4rl5q-uc.a.run.app"
 RESPOND_URL = os.environ.get("RESPOND_URL", DEFAULT_URL)
@@ -30,15 +33,13 @@ def load_device_id() -> str:
 
 
 def main() -> None:
-    id_token = os.environ.get("ID_TOKEN")
+    id_token = get_id_token()
     route_id = os.environ.get("ROUTE_ID", "").strip()
-    if not id_token:
-        raise SystemExit("ID_TOKEN env var is required (Firebase ID token).")
     if not route_id:
         raise SystemExit("ROUTE_ID env var is required.")
 
     from_device_id = load_device_id()
-    payload = {"ok": True}
+    output = os.environ.get("OUTPUT", "ok")
 
     resp = requests.post(
         RESPOND_URL,
@@ -46,8 +47,8 @@ def main() -> None:
         json={
             "route_id": route_id,
             "from_device_id": from_device_id,
-            "payload": payload,
-            "content_type": "application/json",
+            "output": output,
+            "content_type": "text/plain",
         },
         timeout=15,
     )

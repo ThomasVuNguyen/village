@@ -1,8 +1,9 @@
 """
-Register a user with the portal (idempotent; uses Firebase ID token).
+Register a user with the portal (idempotent). Automatically signs up anonymously with Firebase if needed and caches the token locally.
 
 Usage:
-  set ID_TOKEN=<firebase_id_token>
+  set FIREBASE_API_KEY=<firebase_web_api_key>
+  set FIREBASE_REFRESH_TOKEN=<refresh_token>  # optional; otherwise anonymous sign-up is used
   set REGISTER_USER_URL=<override_endpoint_optional>
   python register_user.py
 """
@@ -10,15 +11,14 @@ Usage:
 import os
 
 import requests
+from auth import get_id_token
 
 DEFAULT_URL = "https://register-user-wprnv4rl5q-uc.a.run.app"
 REGISTER_USER_URL = os.environ.get("REGISTER_USER_URL", DEFAULT_URL)
 
 
 def main() -> None:
-    id_token = os.environ.get("ID_TOKEN")
-    if not id_token:
-        raise SystemExit("ID_TOKEN env var is required (Firebase ID token).")
+    id_token = get_id_token()
 
     resp = requests.post(
         REGISTER_USER_URL,

@@ -1,8 +1,9 @@
 """
-Register the local device with the portal.
+Register the local device with the portal. Uses cached/auto-created auth token.
 
 Usage:
-  set ID_TOKEN=<firebase_id_token>
+  set FIREBASE_API_KEY=<firebase_web_api_key>
+  set FIREBASE_REFRESH_TOKEN=<refresh_token>  # one-time, then cached automatically
   python register_device.py [optional-name]
 
 Creates/reads a persistent device_id at ~/.village/device_id (or %APPDATA%\village\device_id on Windows),
@@ -15,6 +16,7 @@ import uuid
 from pathlib import Path
 
 import requests
+from auth import get_id_token
 
 REGISTER_URL = "https://register-device-wprnv4rl5q-uc.a.run.app"
 DEVICE_FILE = (
@@ -34,9 +36,7 @@ def load_or_create_device_id() -> str:
 
 
 def main() -> None:
-    id_token = os.environ.get("ID_TOKEN")
-    if not id_token:
-        raise SystemExit("ID_TOKEN env var is required (Firebase ID token).")
+    id_token = get_id_token()
 
     device_id = load_or_create_device_id()
     name = " ".join(sys.argv[1:]).strip() or device_id

@@ -1,8 +1,9 @@
 """
-Sign in (validate token) against the portal; updates last_sign_in_at.
+Sign in (validate token) against the portal; updates last_sign_in_at. Automatically refreshes or signs up anonymously if no token cached.
 
 Usage:
-  set ID_TOKEN=<firebase_id_token>
+  set FIREBASE_API_KEY=<firebase_web_api_key>
+  set FIREBASE_REFRESH_TOKEN=<refresh_token>  # optional; otherwise anonymous sign-up is used
   set SIGN_IN_URL=<override_endpoint_optional>
   python sign_in.py
 """
@@ -10,15 +11,14 @@ Usage:
 import os
 
 import requests
+from auth import get_id_token
 
 DEFAULT_URL = "https://sign-in-wprnv4rl5q-uc.a.run.app"
 SIGN_IN_URL = os.environ.get("SIGN_IN_URL", DEFAULT_URL)
 
 
 def main() -> None:
-    id_token = os.environ.get("ID_TOKEN")
-    if not id_token:
-        raise SystemExit("ID_TOKEN env var is required (Firebase ID token).")
+    id_token = get_id_token()
 
     resp = requests.post(
         SIGN_IN_URL,

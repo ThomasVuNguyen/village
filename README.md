@@ -11,8 +11,8 @@ In a computer, there are a number of applications running. Other computers can c
 register_user -> register a user (idempotent, via Firebase token)
 sign_in -> validate session and update last_sign_in_at
 register_device -> register a device for a user
-ask -> send a request to an application on a computer in the village network
-respond -> send back a response to the request
+ask -> send a command string to a target device you own
+respond -> send back output for that command
 
 # Design decision
 
@@ -35,16 +35,15 @@ The portal only authenticates the caller and routes messages. All validation and
 - routes/{route_id}
   - from_uid, from_device_id
   - to_uid, to_device_id
-  - payload (opaque blob/JSON), content_type
-  - created_at, status: pending|delivered|failed
+  - command (string CLI command), created_at, status: pending|delivered|failed
 
 - responses/{route_id}
-  - from_device_id, payload, content_type, created_at
+  - from_device_id, output (string/JSON), content_type, created_at
 
 Notes
-- Auth: Firebase Auth (Google). A device calls the portal using the user’s token; portal only checks that token and that target device maps to its owner.
+- Auth: Firebase Auth (Google/anonymous). Clients auto sign up anonymously using the bundled Web API key in app/firebase_config.py (override with FIREBASE_API_KEY env). Tokens cached locally; functions verify tokens and enforce device ownership.
 - Delivery: portal writes routes; destination devices should keep an RTDB listener on their route path for fast push delivery. Polling is only a fallback. Replies go to responses/{route_id}.
-- Ingress: use HTTPS Cloud Functions for register_device/send_route/send_response so server-side auth/validation wraps every write; the functions then write to RTDB.
+- Ingress: use HTTPS Cloud Functions for register_user, sign_in, register_device, ask, respond so server-side auth/validation wraps every write; the functions then write to RTDB.
 
 # Device ID (minimal, permanent)
 - On sign-up/sign-in, check for a local file (`~/.village/device_id` on Unix, `%APPDATA%\\village\\device_id` on Windows). If it exists, reuse the UUID inside.
