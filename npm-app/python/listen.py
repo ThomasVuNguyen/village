@@ -12,6 +12,7 @@ import os
 import signal
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -66,66 +67,119 @@ def send_response(route_id: str, output: str, device_id: str, id_token: str) -> 
         return False
 
 
-def check_pending_routes(device_id: str, id_token: str, processed: set) -> None:
-    """Check for pending routes targeting this device."""
-    try:
-        # Fetch all routes
-        resp = requests.get(
-            f"{RTDB_URL}/routes.json?auth={id_token}",
-            timeout=15,
-        )
-        if resp.status_code != 200:
-            print(f"Error fetching routes: {resp.status_code} {resp.text}")
-            return
+def handle_route(route_id: str, route_data: dict, device_id: str, id_token: str, processed: set) -> None:
+    """Handle a single route if it's for us and pending."""
+    if not isinstance(route_data, dict):
+        return
 
-        routes = resp.json()
-        if not routes:
-            return
+    # Skip if already processed
+    if route_id in processed:
+        return
 
-        for route_id, route_data in routes.items():
-            if not isinstance(route_data, dict):
+    # Check if this route is for us and pending
+    if (
+        route_data.get("to_device_id") == device_id
+        and route_data.get("status") == "pending"
+    ):
+        command = route_data.get("command", "")
+        print(f"\n[{route_id}] Received command: {command}")
+
+        # Set status to busy
+        update_device_status(device_id, "busy", id_token)
+
+        # Execute command
+        output = execute_command(command)
+        print(f"[{route_id}] Output: {output[:100]}...")
+
+        # Send response
+        if send_response(route_id, output, device_id, id_token):
+            print(f"[{route_id}] Response sent successfully")
+            processed.add(route_id)
+        else:
+            print(f"[{route_id}] Failed to send response")
+
+        # Set status back to idle
+        update_device_status(device_id, "idle", id_token)
+
+
+def listen_realtime(device_id: str, id_token: str, processed: set, stop_event: threading.Event) -> None:
+    """Listen for routes in real-time using Firebase SSE streaming."""
+    while not stop_event.is_set():
+        try:
+            # Open SSE stream
+            resp = requests.get(
+                f"{RTDB_URL}/routes.json?auth={id_token}",
+                headers={"Accept": "text/event-stream"},
+                stream=True,
+                timeout=None,  # No timeout for streaming
+            )
+
+            if resp.status_code != 200:
+                print(f"Stream error: {resp.status_code}, retrying in 5s...")
+                time.sleep(5)
                 continue
 
-            # Skip if already processed
-            if route_id in processed:
-                continue
+            # Process SSE events
+            for line in resp.iter_lines():
+                if stop_event.is_set():
+                    break
 
-            # Check if this route is for us and pending
-            if (
-                route_data.get("to_device_id") == device_id
-                and route_data.get("status") == "pending"
-            ):
-                command = route_data.get("command", "")
-                print(f"\n[{route_id}] Received command: {command}")
+                if not line:
+                    continue
 
-                # Set status to busy
-                update_device_status(device_id, "busy", id_token)
+                line = line.decode('utf-8')
 
-                # Execute command
-                output = execute_command(command)
-                print(f"[{route_id}] Output: {output[:100]}...")
+                # Parse SSE event
+                if line.startswith('event: '):
+                    event_type = line[7:].strip()
+                elif line.startswith('data: '):
+                    try:
+                        data = json.loads(line[6:])
+                        path = data.get('path', '')
+                        event_data = data.get('data')
 
-                # Send response
-                if send_response(route_id, output, device_id, id_token):
-                    print(f"[{route_id}] Response sent successfully")
-                    processed.add(route_id)
-                else:
-                    print(f"[{route_id}] Failed to send response")
+                        if event_data is None:
+                            continue
 
-                # Set status back to idle
-                update_device_status(device_id, "idle", id_token)
+                        # Handle different event types
+                        if path == '/':
+                            # Initial snapshot or full update
+                            if isinstance(event_data, dict):
+                                for route_id, route_data in event_data.items():
+                                    # Refresh token for each command
+                                    id_token = get_id_token(auto_create=False)
+                                    handle_route(route_id, route_data, device_id, id_token, processed)
+                        elif path.startswith('/'):
+                            # Single route update
+                            route_id = path[1:]  # Remove leading '/'
+                            if isinstance(event_data, dict):
+                                # Refresh token
+                                id_token = get_id_token(auto_create=False)
+                                handle_route(route_id, event_data, device_id, id_token, processed)
 
-    except Exception as e:
-        print(f"Error checking routes: {e}")
+                    except json.JSONDecodeError:
+                        pass  # Ignore malformed data
+                    except Exception as e:
+                        print(f"Error processing event: {e}")
+
+        except requests.exceptions.RequestException as e:
+            if not stop_event.is_set():
+                print(f"Connection error: {e}, reconnecting in 5s...")
+                time.sleep(5)
+        except Exception as e:
+            if not stop_event.is_set():
+                print(f"Error: {e}, reconnecting in 5s...")
+                time.sleep(5)
 
 
 def main() -> None:
     device_id = get_local_device_id()
-    id_token_holder = {"token": None}  # Mutable container for signal handlers
+    stop_event = threading.Event()
 
     def cleanup(signum=None, frame=None):
         """Cleanup handler - set device offline."""
         print("\nStopping listener...")
+        stop_event.set()  # Signal listener thread to stop
         try:
             # Get fresh token for cleanup
             token = get_id_token(auto_create=False)
@@ -142,28 +196,20 @@ def main() -> None:
     # Also register atexit as fallback
     atexit.register(lambda: cleanup())
 
-    print(f"Listening for commands on device: {device_id}")
+    print(f"Listening for commands on device: {device_id} (real-time mode)")
     print("Press Ctrl+C to stop\n")
 
     processed = set()
-    poll_interval = 0.5  # seconds (reduced for faster response)
 
     # Set initial status to idle
     id_token = get_id_token(auto_create=False)
-    id_token_holder["token"] = id_token
     update_device_status(device_id, "idle", id_token)
 
-    while True:
-        try:
-            id_token = get_id_token(auto_create=False)
-            id_token_holder["token"] = id_token
-            check_pending_routes(device_id, id_token, processed)
-            time.sleep(poll_interval)
-        except KeyboardInterrupt:
-            cleanup()
-        except Exception as e:
-            print(f"Error: {e}")
-            time.sleep(poll_interval)
+    # Start real-time listener (blocking)
+    try:
+        listen_realtime(device_id, id_token, processed, stop_event)
+    except KeyboardInterrupt:
+        cleanup()
 
 
 if __name__ == "__main__":

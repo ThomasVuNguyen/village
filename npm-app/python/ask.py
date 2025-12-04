@@ -31,36 +31,63 @@ RTDB_URL = "https://village-app.firebaseio.com"
 
 
 def wait_for_response(route_id: str, id_token: str, start_time: float, timeout: int = 240) -> None:
-    """Poll for response and print when received."""
+    """Wait for response in real-time using Firebase SSE streaming."""
     print(f"Waiting for response (timeout: {timeout}s)...", end="", flush=True)
-    poll_interval = 0.5  # seconds (reduced for faster response)
 
-    while time.time() - start_time < timeout:
-        try:
-            resp = requests.get(
-                f"{RTDB_URL}/responses/{route_id}.json?auth={id_token}",
-                timeout=10,
-            )
-            if resp.status_code == 200 and resp.json():
-                response_data = resp.json()
-                output = response_data.get("output", "[no output]")
-                duration = time.time() - start_time
-                print("\n\n" + "=" * 60)
-                print("RESPONSE:")
-                print("=" * 60)
-                print(output)
-                print("=" * 60)
-                print(f"Time taken: {duration:.2f}s")
+    try:
+        # Open SSE stream for this specific response path
+        resp = requests.get(
+            f"{RTDB_URL}/responses/{route_id}.json?auth={id_token}",
+            headers={"Accept": "text/event-stream"},
+            stream=True,
+            timeout=timeout,
+        )
+
+        if resp.status_code != 200:
+            print(f"\nError: {resp.status_code} {resp.text}")
+            return
+
+        # Process SSE events
+        for line in resp.iter_lines():
+            # Check timeout
+            if time.time() - start_time >= timeout:
+                print("\n[timeout] No response received")
                 return
 
-            print(".", end="", flush=True)
-            time.sleep(poll_interval)
+            if not line:
+                continue
 
-        except Exception as e:
-            print(f"\nError checking response: {e}")
-            time.sleep(poll_interval)
+            line = line.decode('utf-8')
 
-    print("\n[timeout] No response received")
+            # Parse SSE data events
+            if line.startswith('data: '):
+                try:
+                    data = json.loads(line[6:])
+                    event_data = data.get('data')
+
+                    # Response arrived!
+                    if event_data and isinstance(event_data, dict):
+                        output = event_data.get("output", "[no output]")
+                        duration = time.time() - start_time
+                        print("\n\n" + "=" * 60)
+                        print("RESPONSE:")
+                        print("=" * 60)
+                        print(output)
+                        print("=" * 60)
+                        print(f"Time taken: {duration:.2f}s")
+                        return
+
+                except json.JSONDecodeError:
+                    pass  # Ignore malformed data
+
+            # Show progress
+            if time.time() - start_time > 0.5:  # After 500ms, show dots
+                print(".", end="", flush=True)
+
+    except requests.exceptions.Timeout:
+        print("\n[timeout] No response received")
+    except Exception as e:
+        print(f"\nError waiting for response: {e}")
 
 
 def main() -> None:
