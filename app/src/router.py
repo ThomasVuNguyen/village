@@ -4,7 +4,7 @@ Routing logic for finding the best device to execute a command.
 
 from typing import Optional
 
-from src.device import get_idle_devices
+from .device import get_idle_devices
 
 
 def find_idle_device(id_token: str) -> Optional[str]:

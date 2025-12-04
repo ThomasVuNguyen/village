@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import requests
-from firebase_config import API_KEY as CONFIG_API_KEY
+from .firebase_config import API_KEY as CONFIG_API_KEY
 
 AUTH_FILE = (
     Path(os.environ["APPDATA"]) / "village" / "auth.json"
