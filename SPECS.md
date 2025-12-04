@@ -59,7 +59,7 @@
 - CLI uses positional commands (`login`, `call`, `logs`, `config set`) reading credentials from `village/credentials.json`; passwords can still be passed positionally.
 
 ## Cloud (backend) MVP spec
-- Lives in `cloud/`; uses Firebase RTDB for queues/presence/responses and an HTTPS ingress to authenticate and enqueue.
-- Ingress validates uid/password, checks app is allowed and presence is fresh, then writes the request to RTDB with `call_id` and `ts`.
+- Lives in `cloud/`; uses Firebase RTDB for queues/presence/responses and an HTTPS ingress (Cloud Function `portal`) to authenticate and enqueue.
+- Ingress validates uid/password from `/credentials/{uid}`, checks app is allowed and presence is fresh, then writes the request to RTDB with `call_id` and `ts`; short-polls responses to return immediately when possible.
 - Device writes `{call_id, status, result|error_code|message}` to responses; clients poll/read and drop stale results by `ts`.
 - Presence tracked per `uid` (`last_seen/status`); ingress returns `offline` if stale.

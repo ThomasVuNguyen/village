@@ -20,8 +20,8 @@
 
 ## Flow: call an app from another machine
 1) Caller runs `village call UID PASSWORD app arg1 arg2` (or uses stored machine identity from `config.json`).
-2) CLI writes request to the cloud with `call_id` and `ts`.
-3) Caller waits for response from the cloud; stale responses are dropped client-side.
+2) Cloud portal checks uid/password and app allowlist, enqueues the request, and short-polls for a response.
+3) Caller receives either a response payload or a `queued` status if the device is offline/slow.
 
 ## Flow: device handling inbound work
 1) Agent sees request in its queue (for allowed app + uid).
