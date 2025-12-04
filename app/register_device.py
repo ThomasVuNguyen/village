@@ -14,7 +14,7 @@ import uuid
 from pathlib import Path
 
 import requests
-from auth import get_id_token
+from src.auth import get_id_token
 
 REGISTER_URL = "https://register-device-wprnv4rl5q-uc.a.run.app"
 DEVICE_FILE = (

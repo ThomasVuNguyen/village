@@ -13,22 +13,11 @@ import time
 from pathlib import Path
 
 import requests
-from auth import get_id_token
-from firebase_config import API_KEY
+from src.auth import get_id_token
+from src.device import get_local_device_id, update_device_status
 
 RTDB_URL = "https://village-app.firebaseio.com"
 RESPOND_URL = "https://respond-wprnv4rl5q-uc.a.run.app"
-DEVICE_FILE = (
-    Path(os.environ["APPDATA"]) / "village" / "device_id"
-    if os.name == "nt"
-    else Path.home() / ".village" / "device_id"
-)
-
-
-def load_device_id() -> str:
-    if not DEVICE_FILE.exists():
-        raise SystemExit("device_id file not found; run register_device.py first.")
-    return DEVICE_FILE.read_text().strip()
 
 
 def execute_command(command: str) -> str:
@@ -106,6 +95,9 @@ def check_pending_routes(device_id: str, id_token: str, processed: set) -> None:
                 command = route_data.get("command", "")
                 print(f"\n[{route_id}] Received command: {command}")
 
+                # Set status to busy
+                update_device_status(device_id, "busy", id_token)
+
                 # Execute command
                 output = execute_command(command)
                 print(f"[{route_id}] Output: {output[:100]}...")
@@ -117,17 +109,24 @@ def check_pending_routes(device_id: str, id_token: str, processed: set) -> None:
                 else:
                     print(f"[{route_id}] Failed to send response")
 
+                # Set status back to idle
+                update_device_status(device_id, "idle", id_token)
+
     except Exception as e:
         print(f"Error checking routes: {e}")
 
 
 def main() -> None:
-    device_id = load_device_id()
+    device_id = get_local_device_id()
     print(f"Listening for commands on device: {device_id}")
     print("Press Ctrl+C to stop\n")
 
     processed = set()
     poll_interval = 2  # seconds
+
+    # Set initial status to idle
+    id_token = get_id_token(auto_create=False)
+    update_device_status(device_id, "idle", id_token)
 
     while True:
         try:
@@ -136,6 +135,8 @@ def main() -> None:
             time.sleep(poll_interval)
         except KeyboardInterrupt:
             print("\nStopping listener...")
+            # Set status to offline before exiting
+            update_device_status(device_id, "offline", id_token)
             break
         except Exception as e:
             print(f"Error: {e}")

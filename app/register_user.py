@@ -9,7 +9,7 @@ Usage:
 import os
 
 import requests
-from auth import get_id_token
+from src.auth import get_id_token
 
 DEFAULT_URL = "https://register-user-wprnv4rl5q-uc.a.run.app"
 REGISTER_USER_URL = os.environ.get("REGISTER_USER_URL", DEFAULT_URL)

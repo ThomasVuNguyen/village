@@ -18,6 +18,8 @@ python listen.py
 ```
 
 **Device A (sender) - Send command:**
+
+*Mode 1: One-to-one (explicit target)*
 ```bash
 # PowerShell
 $env:TO_DEVICE_ID="device-b-id-here"
@@ -30,7 +32,20 @@ export COMMAND="ls -la"
 python ask.py
 ```
 
-Device A will wait, Device B executes the command, response appears in Device A terminal.
+*Mode 2: One-to-many (auto-route to idle device)*
+```bash
+# PowerShell
+$env:TO_DEVICE_ID="auto"  # or leave empty
+$env:COMMAND="ls -la"
+python ask.py
+
+# Bash
+export TO_DEVICE_ID="auto"  # or leave empty
+export COMMAND="ls -la"
+python ask.py
+```
+
+Device A will wait, target device executes the command, response appears in Device A terminal. In auto mode, it finds the first idle device and routes to it.
 
 **Other commands:**
 - `python sign_out.py` - Sign out (keeps device_id)
