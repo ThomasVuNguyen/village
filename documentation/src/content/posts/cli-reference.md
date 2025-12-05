@@ -1,9 +1,7 @@
 ---
-title: 'CLI reference'
+title: 'Reference'
 pubDate: '2025-12-02'
 ---
-
-All commands are thin Node wrappers around the Python core.
 
 ```bash
 village setup              # Sign up/sign in and register this device
@@ -17,14 +15,15 @@ village logout --reset     # Clear auth and delete device_id file
 village version | -v       # Show installed CLI version
 ```
 
-Environment variables:
+Flags:
+- `village send --to <device_id>`: target a specific device (defaults to auto-route)
+- `village send --no-wait`: fire and forget
 
-- `TO_DEVICE_ID`: set a target (`auto` or empty triggers idle-device routing)
-- `COMMAND`: raw command string to execute on the target
+Environment:
+- `TO_DEVICE_ID`: set a target (`auto` picks an idle one)
+- `COMMAND`: command string to run on the target
 
 Notes:
-
-- Device IDs are permanent per machine unless you `--reset`.
-- `listen` uses 100ms polling, marks the device busy while executing, and posts the output via the `respond` Cloud Function.
-- `send` waits for a response by polling `responses/{route_id}` unless you pass `--no-wait`.
-- Auth tokens refresh automatically; cached at `~/.village/auth.json` or `%APPDATA%\village\auth.json`.
+- Device IDs stick to each machine unless you `--reset`.
+- `send` waits by default; add `--no-wait` to fire-and-forget.
+- Tokens refresh automatically; cached in `~/.village/auth.json` or `%APPDATA%\\village\\auth.json`.
