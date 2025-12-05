@@ -1,5 +1,5 @@
 ---
-title: 'Architecture (deep dive)'
+title: 'Architecture'
 pubDate: '2025-12-03'
 ---
 

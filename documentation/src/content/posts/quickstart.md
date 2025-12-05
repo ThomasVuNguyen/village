@@ -1,12 +1,16 @@
 ---
-title: 'Quick Start: If you have two or more computers/servers'
+title: 'Quickstart'
 pubDate: '2025-12-01'
 ---
-This tutorial assumes you have two or more computers/servers.
+You need 2+ machines (physical or virtual, anywhere, any network). 
 
-They can be physical or virtual machines, on-premises or in the cloud. They can be on different networks or even in different countries. All you need is a working internet connection on both computers.
+For examples:
+- A laptop at home.
+- A computer at work.
+- Servers in the cloud.
+- Your grandma's old computer.
 
-In this guide, you will learn how to connect two devices and send commands between them.
+Just make sure they are connected to the internet. We will make them talk to each other.
 
 ## 1) Install the CLI on Computer #1
 
@@ -22,9 +26,9 @@ Requirements: Node.js 16+ and Python 3.x.
 village setup
 ```
 
-You will be prompted to enter an email & password for login. And your Computer will be registered in the village network under your account.
+You will be prompted to enter an email & password for login. This registers the computer under your account. Repeat this on every device you want to use.
 
-## 3) Start a listener on the target device
+## 3) Start a listener on Computer #1
 
 On the machine that will run commands:
 
@@ -32,7 +36,7 @@ On the machine that will run commands:
 village listen
 ```
 
-This will allow other computers under your account to send command to Computer #1.
+This marks the device idle and ready to receive commands.
 
 ## 4) On Computer #2, perform the same setup
 
@@ -49,7 +53,9 @@ On your sender (any of your signed-in devices):
 village send "ls"
 # auto-routes to an idle device you own
 ```
-This will send the command to Computer #1 from Computer #2!
+Village will route the command to one of your idle listener devices (at random). The “message” is just the terminal command string; the response is exactly what the command prints (stdout + stderr).
+
+Repeat this process with any additional devices/servers.
 
 If you have more than 2 devices and want to send commands to Computer #2, you can use the `--to` flag:
 
