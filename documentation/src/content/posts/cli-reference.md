@@ -1,5 +1,5 @@
 ---
-title: 'Reference'
+title: 'CLI Reference'
 pubDate: '2025-12-02'
 ---
 
