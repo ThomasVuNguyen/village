@@ -14,10 +14,9 @@ import remarkTOC from './src/plugins/remark-toc.mjs'
 import { themeConfig } from './src/config'
 import { imageConfig } from './src/utils/image-config'
 import path from 'path'
-import staticAdapter from '@astrojs/static'
 
 export default defineConfig({
-  adapter: staticAdapter(),
+  output: 'static',
   site: themeConfig.site.website,
   image: {
     service: {

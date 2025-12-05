@@ -1,0 +1,7 @@
+{
+  "hosting": {
+    "site": "comfy-village",
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  }
+}

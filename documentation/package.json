@@ -15,7 +15,6 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@astrojs/static": "^5.0.4",
     "@astrojs/mdx": "^4.3.12",
     "@astrojs/rss": "^4.0.14",
     "@astrojs/sitemap": "^3.6.0",
