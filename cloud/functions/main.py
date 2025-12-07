@@ -239,6 +239,12 @@ def respond(req: https_fn.Request) -> https_fn.Response:
 
 @https_fn.on_request()
 def use_cases(req: https_fn.Request) -> https_fn.Response:
+    if req.method == "OPTIONS":
+        resp_obj = https_fn.Response("", status=204)
+        resp_obj.headers["Access-Control-Allow-Origin"] = "*"
+        resp_obj.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        resp_obj.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        return resp_obj
     if req.method != "GET":
         return _error("Use GET", status=405)
 
@@ -278,6 +284,12 @@ def use_cases(req: https_fn.Request) -> https_fn.Response:
 
 @https_fn.on_request()
 def stats(req: https_fn.Request) -> https_fn.Response:
+    if req.method == "OPTIONS":
+        resp_obj = https_fn.Response("", status=204)
+        resp_obj.headers["Access-Control-Allow-Origin"] = "*"
+        resp_obj.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        resp_obj.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        return resp_obj
     if req.method != "GET":
         return _error("Use GET", status=405)
 
