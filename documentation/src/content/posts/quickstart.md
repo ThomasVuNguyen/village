@@ -15,7 +15,7 @@ Just make sure they are connected to the internet. We will make them talk to eac
 ## 1) Install the CLI on Computer #1
 
 ```bash
-npm install -g @thomasthemaker/village
+sudo npm install -g @thomasthemaker/village
 ```
 
 Requirements: Node.js 16+ and Python 3.x.

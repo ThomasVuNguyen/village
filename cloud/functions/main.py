@@ -2,6 +2,7 @@ import json
 import time
 from typing import Any, Dict, Optional
 
+import requests
 from firebase_admin import auth, db, initialize_app
 from firebase_functions import https_fn
 
@@ -234,3 +235,68 @@ def respond(req: https_fn.Request) -> https_fn.Response:
     _route_ref(route_id).update({"status": "delivered"})
 
     return _json_response({"route_id": route_id, "status": "delivered"})
+
+
+@https_fn.on_request()
+def use_cases(req: https_fn.Request) -> https_fn.Response:
+    if req.method != "GET":
+        return _error("Use GET", status=405)
+
+    # Public proxy to fetch GitHub issues labeled "use-case"
+    url = "https://api.github.com/repos/thomasvunguyen/village/issues"
+    params = {"labels": "use-case", "state": "open", "per_page": 10}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "village-cloud-functions",
+    }
+    try:
+        resp = requests.get(url, params=params, headers=headers, timeout=10)
+        if resp.status_code != 200:
+            return _error(f"github error {resp.status_code}", status=502)
+        data = resp.json()
+        items = []
+        for item in data or []:
+            items.append(
+                {
+                    "title": item.get("title", "Untitled"),
+                    "body": (item.get("body") or "")[:240],
+                    "url": item.get("html_url", ""),
+                }
+            )
+        resp_obj = https_fn.Response(
+            json.dumps({"items": items}),
+            status=200,
+            mimetype="application/json",
+        )
+        resp_obj.headers["Access-Control-Allow-Origin"] = "*"
+        resp_obj.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        resp_obj.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        return resp_obj
+    except Exception as e:
+        return _error(f"failed to fetch use cases: {e}", status=502)
+
+
+@https_fn.on_request()
+def stats(req: https_fn.Request) -> https_fn.Response:
+    if req.method != "GET":
+        return _error("Use GET", status=405)
+
+    try:
+        users = db.reference("users").get() or {}
+        devices = db.reference("devices").get() or {}
+        resp_obj = https_fn.Response(
+            json.dumps(
+                {
+                    "users": len(users.keys()),
+                    "devices": len(devices.keys()),
+                }
+            ),
+            status=200,
+            mimetype="application/json",
+        )
+        resp_obj.headers["Access-Control-Allow-Origin"] = "*"
+        resp_obj.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        resp_obj.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        return resp_obj
+    except Exception as e:
+        return _error(f"failed to fetch stats: {e}", status=502)

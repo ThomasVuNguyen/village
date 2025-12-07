@@ -1,0 +1,36 @@
+<a
+  class="cta"
+  href="https://github.com/thomasvunguyen/village/issues/new?labels=use-case&title=My%20use%20case&body=I%27d%20use%20Village%20to..."
+  target="_blank"
+  rel="noreferrer"
+>
+  Share your use case on GitHub →
+</a>
+
+<style>
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 1rem 0;
+    padding: 0.65rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface) 88%, var(--text-secondary) 6%),
+      var(--surface)
+    );
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+    box-shadow: 0 10px 24px -20px rgb(0 0 0 / 35%);
+  }
+
+  .cta:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--border) 60%, var(--text-secondary) 20%);
+    box-shadow: 0 12px 28px -20px rgb(0 0 0 / 45%);
+  }
+</style>

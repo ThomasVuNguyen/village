@@ -1,0 +1,109 @@
+<div
+  class="usecases"
+  id="usecases"
+  data-api="https://us-central1-comfyshare-a8fd8.cloudfunctions.net/use_cases"
+  data-fallback="https://api.github.com/repos/thomasvunguyen/village/issues?labels=use-case&state=open&per_page=20"
+>
+  <p class="muted">Loading...</p>
+</div>
+
+<script is:inline>
+  ;(async function () {
+    const container = document.getElementById('usecases')
+    if (!container) return
+    const listEl = container.querySelector('.muted')
+    const api = container.dataset.api
+    const fallback = container.dataset.fallback
+
+    async function fetchUseCases(url) {
+      const resp = await fetch(url, {
+        headers: {
+          'User-Agent': 'village-docs',
+          Accept: 'application/json'
+        }
+      })
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+      const data = await resp.json()
+      const items = data.items || data // function returns {items}, GitHub returns array
+      return (items || []).map((item) => ({
+        title: item.title ?? 'Untitled',
+        body: (item.body ?? '').slice(0, 240),
+        url: item.url || item.html_url || '#'
+      }))
+    }
+
+    function render(items) {
+      if (!items.length) {
+        listEl.textContent = 'No use cases yet. Be the first!'
+        return
+      }
+      const ul = document.createElement('ul')
+      ul.innerHTML = items
+        .map(
+          (item) => `
+        <li>
+          <a href="${item.url}" target="_blank" rel="noreferrer">${item.title}</a>
+          ${item.body ? `<p>${item.body}${item.body.length >= 240 ? '...' : ''}</p>` : ''}
+        </li>`
+        )
+        .join('')
+      container.replaceChild(ul, listEl)
+    }
+
+    try {
+      const items = await fetchUseCases(api)
+      render(items)
+    } catch (e) {
+      try {
+        const items = await fetchUseCases(fallback)
+        render(items)
+      } catch {
+        listEl.textContent = 'Could not load use cases right now.'
+      }
+    }
+  })()
+</script>
+
+<style>
+  .usecases {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--surface) 88%, var(--text-secondary) 6%);
+    box-shadow: 0 10px 24px -20px rgb(0 0 0 / 35%);
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  li {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  a {
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--text-secondary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-secondary);
+  }
+
+  .muted {
+    margin: 0.25rem 0 0;
+    color: var(--text-secondary);
+  }
+</style>

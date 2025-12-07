@@ -1,0 +1,97 @@
+<div
+  class="stats"
+  id="network-stats"
+  data-api="https://us-central1-comfyshare-a8fd8.cloudfunctions.net/stats"
+>
+  <p class="muted">Loading stats…</p>
+</div>
+
+<script is:inline>
+  ;(async function () {
+    const el = document.getElementById('network-stats')
+    if (!el) return
+    const placeholder = el.querySelector('.muted')
+    const api = el.dataset.api
+
+    async function fetchStats(url) {
+      const resp = await fetch(url, {
+        headers: {
+          'User-Agent': 'village-docs',
+          Accept: 'application/json'
+        }
+      })
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+      const data = await resp.json()
+      return {
+        users: data.users ?? 0,
+        devices: data.devices ?? 0
+      }
+    }
+
+    function render({ users, devices }) {
+      const cards = document.createElement('div')
+      cards.className = 'card-grid'
+      cards.innerHTML = `
+        <div class="card">
+          <div class="label">Users</div>
+          <div class="value">${users}</div>
+        </div>
+        <div class="card">
+          <div class="label">Devices</div>
+          <div class="value">${devices}</div>
+        </div>
+      `
+      el.replaceChild(cards, placeholder)
+    }
+
+    try {
+      const stats = await fetchStats(api)
+      render(stats)
+    } catch (e) {
+      placeholder.textContent = 'Could not load stats right now.'
+    }
+  })()
+</script>
+
+<style>
+  .stats {
+    margin-top: 1.25rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--surface) 88%, var(--text-secondary) 6%);
+    box-shadow: 0 10px 24px -20px rgb(0 0 0 / 35%);
+  }
+
+  .muted {
+    margin: 0.25rem 0 0;
+    color: var(--text-secondary);
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .card {
+    padding: 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--surface);
+    box-shadow: 0 8px 18px -18px rgb(0 0 0 / 35%);
+  }
+
+  .label {
+    font-size: var(--font-size-s);
+    color: var(--text-secondary);
+    letter-spacing: var(--spacing-s);
+    text-transform: uppercase;
+  }
+
+  .value {
+    margin-top: 0.35rem;
+    font-size: 2rem;
+    font-weight: var(--font-weight-bold);
+  }
+</style>
