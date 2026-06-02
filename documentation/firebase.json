@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "comfy-village",
+    "site": "village-comfy",
     "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
   }
